@@ -1,4 +1,5 @@
 import { TrendingDown, TrendingUp } from 'lucide-react';
+import { formatCurrency } from '../../lib/formatters';
 
 interface PriceStatProps {
   label: string;
@@ -6,14 +7,6 @@ interface PriceStatProps {
   trend?: 'up' | 'down' | null;
   trendPercent?: number | null;
   valueClassName?: string;
-}
-
-function formatPrice(value?: number | null) {
-  if (value === null || value === undefined) {
-    return '—';
-  }
-
-  return `$${value}`;
 }
 
 export function PriceStat({
@@ -29,7 +22,7 @@ export function PriceStat({
     <div className="flex items-center justify-between">
       <span className="text-xs text-muted-foreground">{label}</span>
       <div className="flex items-center gap-1">
-        <span className={valueClassName}>{formatPrice(value)}</span>
+        <span className={valueClassName}>{formatCurrency(value)}</span>
         {hasTrend && (
           <div className={`flex items-center text-xs ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
             {trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}

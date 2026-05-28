@@ -15,6 +15,8 @@ import CardDetail from './CardDetail';
 import SellCard from './SellCard';
 import Watchlist from './Watchlist';
 
+const HOMEPAGE_CARD_LIMIT = 18;
+
 function getCurrentRoute() {
   if (window.location.pathname.startsWith('/cards/')) {
     return window.location.pathname;
@@ -93,7 +95,7 @@ export default function App() {
     };
   }, [debouncedSearch]);
 
-  const trendingCards = useMemo(() => cards, [cards]);
+  const trendingCards = useMemo(() => cards.slice(0, HOMEPAGE_CARD_LIMIT), [cards]);
 
   const recentlyListed = useMemo(
     () => [...cards].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),

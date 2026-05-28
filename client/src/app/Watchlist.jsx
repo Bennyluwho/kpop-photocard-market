@@ -4,18 +4,11 @@ import { CardGrid } from './components/CardGrid';
 import { Navbar } from './components/Navbar';
 import { PhotocardCard } from './components/PhotocardCard';
 import { PrimaryLink } from './components/PrimaryButton';
-import { SecondaryButton } from './components/SecondaryButton';
+import { SecondaryButton, SecondaryLink } from './components/SecondaryButton';
 import { SectionHeader } from './components/SectionHeader';
 import { EmptyState } from './components/StatusStates';
+import { formatCurrency } from '../lib/formatters';
 import { getWatchlist, removeFromWatchlist, saveWatchlist, subscribeToWatchlist } from './watchlistStore.js';
-
-function formatPrice(value) {
-  if (value === null || value === undefined) {
-    return '$0';
-  }
-
-  return `$${value.toLocaleString()}`;
-}
 
 function getCardValue(card) {
   return card.estimatedMarketValue ?? card.lowestAsk ?? card.lastSale ?? 0;
@@ -66,22 +59,22 @@ export default function Watchlist() {
           </div>
           <div className="rounded-lg border border-border bg-card p-5 shadow-sm sm:col-span-2">
             <p className="text-sm text-muted-foreground">Estimated total value</p>
-            <p className="mt-2 text-2xl font-semibold">{formatPrice(estimatedTotal)}</p>
+            <p className="mt-2 text-2xl font-semibold">{formatCurrency(estimatedTotal)}</p>
           </div>
         </div>
 
         <SectionHeader
           title="Watchlist"
           action={
-            watchlist.length > 0 && (
-              <SecondaryButton
-                type="button"
-                onClick={handleClearAll}
-              >
-                <Trash2 className="h-4 w-4" />
-                Clear all
-              </SecondaryButton>
-            )
+            <div className="flex flex-wrap gap-2">
+              <SecondaryLink href="/sell">Sell or List</SecondaryLink>
+              {watchlist.length > 0 && (
+                <SecondaryButton type="button" onClick={handleClearAll}>
+                  <Trash2 className="h-4 w-4" />
+                  Clear all
+                </SecondaryButton>
+              )}
+            </div>
           }
         />
 

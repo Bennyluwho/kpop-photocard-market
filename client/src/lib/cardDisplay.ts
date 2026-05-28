@@ -16,12 +16,16 @@ const GROUP_IMAGES: Record<string, string> = {
 const CARD_PLACEHOLDER =
   "https://images.unsplash.com/photo-1613294022243-c1732e7af9ad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080";
 
+export function getCardImage(card: Pick<CardFeedItem, "imageUrl" | "group">) {
+  return card.imageUrl || GROUP_IMAGES[card.group] || CARD_PLACEHOLDER;
+}
+
 export function formatAlbumLabel(card: Pick<CardFeedItem, "album" | "version">) {
   return card.version ? `${card.album} · ${card.version}` : card.album;
 }
 
 export function cardToPhotocardProps(card: CardFeedItem) {
-  const image = card.imageUrl || GROUP_IMAGES[card.group] || CARD_PLACEHOLDER;
+  const image = getCardImage(card);
   const album = formatAlbumLabel(card);
 
   return {
@@ -56,5 +60,6 @@ export function groupToCardProps(group: { name: string; cardCount: number }) {
     name: group.name,
     image: GROUP_IMAGES[group.name] ?? CARD_PLACEHOLDER,
     cardCount: group.cardCount,
+    href: `/?group=${encodeURIComponent(group.name)}#marketplace`,
   };
 }

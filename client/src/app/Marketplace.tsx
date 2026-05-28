@@ -23,12 +23,20 @@ const initialFilters: MarketplaceFilters = {
   maxPrice: '',
 };
 
+function getInitialFilters() {
+  const group = new URLSearchParams(window.location.search).get('group') ?? '';
+  return {
+    ...initialFilters,
+    group,
+  };
+}
+
 export default function Marketplace() {
   const [cards, setCards] = useState<CardFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<MarketplaceFilters>(initialFilters);
+  const [filters, setFilters] = useState<MarketplaceFilters>(getInitialFilters);
   const [sort, setSort] = useState<SortOption>('trending');
 
   useEffect(() => {

@@ -1,16 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Heart, LoaderCircle, X } from 'lucide-react';
+import { Heart, LoaderCircle } from 'lucide-react';
 import type { CardFeedItem, CardSummary, PriceHistoryEntry } from '../api/types';
-import { cardToPhotocardProps, formatAlbumLabel } from '../lib/cardDisplay';
+import { cardToPhotocardProps, formatAlbumLabel, getCardImage } from '../lib/cardDisplay';
+import { formatCurrency } from '../lib/formatters';
 import { getCardFeed, getCardSummary } from '../services/cardApi.js';
 import { CardGrid } from './components/CardGrid';
 import { ImageWithFallback } from './components/ImageWithFallback';
 import { Navbar } from './components/Navbar';
 import { PhotocardCard } from './components/PhotocardCard';
 import { PrimaryButton } from './components/PrimaryButton';
-import { SecondaryButton } from './components/SecondaryButton';
+import { SecondaryLink } from './components/SecondaryButton';
 import { SectionHeader } from './components/SectionHeader';
 import { CardSkeletonGrid, DetailSkeleton, EmptyState, ErrorState } from './components/StatusStates';
+import {
+  addToWatchlist,
+  isWatchlisted,
+  removeFromWatchlist,
+  subscribeToWatchlist,
+} from './watchlistStore.js';
 
 interface CardDetailProps {
   cardId: string;
@@ -21,7 +28,7 @@ export default function CardDetail({ cardId }: CardDetailProps) {
   const [similarCards, setSimilarCards] = useState<CardFeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [modalAction, setModalAction] = useState<string | null>(null);
+  const [saved, setSaved] = useState(() => isWatchlisted(cardId));
 
   useEffect(() => {
     let cancelled = false;
@@ -62,6 +69,12 @@ export default function CardDetail({ cardId }: CardDetailProps) {
     };
   }, [cardId]);
 
+  useEffect(() => {
+    const updateSavedState = () => setSaved(isWatchlisted(cardId));
+    updateSavedState();
+    return subscribeToWatchlist(updateSavedState);
+  }, [cardId]);
+
   const sortedSales = useMemo(
     () =>
       [...(summary?.priceHistory ?? [])].sort(
@@ -74,6 +87,30 @@ export default function CardDetail({ cardId }: CardDetailProps) {
   const lowestAsk = summary?.estimatedMarketValue ?? null;
   const marketPrice = summary?.estimatedMarketValue ?? null;
   const highestBid = null;
+
+  function handleWatchlistToggle() {
+    if (!summary) {
+      return;
+    }
+
+    if (saved) {
+      removeFromWatchlist(cardId);
+      return;
+    }
+
+    const detailCard = summary.card;
+    addToWatchlist({
+      id: detailCard._id,
+      image: getCardImage(detailCard),
+      group: detailCard.group,
+      idol: detailCard.idol,
+      album: formatAlbumLabel(detailCard),
+      rarity: detailCard.rarity,
+      lowestAsk,
+      lastSale,
+      estimatedMarketValue: marketPrice,
+    });
+  }
 
   if (loading) {
     return (
@@ -142,13 +179,12 @@ export default function CardDetail({ cardId }: CardDetailProps) {
             </div>
 
             <div className="mb-6 grid gap-3 sm:grid-cols-2">
-              <PrimaryButton onClick={() => setModalAction('Buy Now')}>Buy Now</PrimaryButton>
-              <SecondaryButton onClick={() => setModalAction('Make Offer')}>Make Offer</SecondaryButton>
-              <SecondaryButton onClick={() => setModalAction('Sell This Card')}>Sell This Card</SecondaryButton>
-              <SecondaryButton onClick={() => setModalAction('Add to Watchlist')} className="flex items-center justify-center gap-2">
-                <Heart className="h-4 w-4" />
-                Add to Watchlist
-              </SecondaryButton>
+              <PrimaryButton onClick={handleWatchlistToggle}>
+                <Heart className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
+                {saved ? 'Saved to Watchlist' : 'Add to Watchlist'}
+              </PrimaryButton>
+              <SecondaryLink href="/watchlist">View Watchlist</SecondaryLink>
+              <SecondaryLink href="/sell" className="sm:col-span-2">Sell or List a Card</SecondaryLink>
             </div>
 
             <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
@@ -201,7 +237,7 @@ export default function CardDetail({ cardId }: CardDetailProps) {
                       <tr key={sale._id} className="border-b border-border last:border-0">
                         <td className="py-2">{formatDate(sale.soldDate)}</td>
                         <td className="py-2 text-muted-foreground">{sale.condition}</td>
-                        <td className="py-2 text-right font-medium">{formatPrice(sale.price)}</td>
+                        <td className="py-2 text-right font-medium">{formatCurrency(sale.price)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -227,7 +263,6 @@ export default function CardDetail({ cardId }: CardDetailProps) {
         </section>
       </main>
 
-      {modalAction && <ActionModal action={modalAction} onClose={() => setModalAction(null)} />}
     </div>
   );
 }
@@ -236,7 +271,7 @@ function MarketStat({ label, value, fallback = '-' }: { label: string; value?: n
   return (
     <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-xl font-semibold">{value === null || value === undefined ? fallback : formatPrice(value)}</p>
+      <p className="mt-1 truncate text-xl font-semibold">{value === null || value === undefined ? fallback : formatCurrency(value)}</p>
     </div>
   );
 }
@@ -255,36 +290,11 @@ function PriceBar({ sale, maxPrice }: { sale: PriceHistoryEntry; maxPrice: numbe
 
   return (
     <div className="flex flex-1 flex-col items-center justify-end gap-2">
-      <div className="text-xs font-medium">{formatPrice(sale.price)}</div>
+      <div className="text-xs font-medium">{formatCurrency(sale.price)}</div>
       <div className="min-w-10 rounded-t bg-primary/80" style={{ height: `${height}%` }} />
       <div className="text-xs text-muted-foreground">{formatShortDate(sale.soldDate)}</div>
     </div>
   );
-}
-
-function ActionModal({ action, onClose }: { action: string; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-md rounded-lg bg-background p-5 shadow-xl">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-semibold">{action}</h2>
-          <button type="button" aria-label="Close modal" onClick={onClose} className="rounded-lg p-1 hover:bg-accent">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          This action is a placeholder for now. The marketplace flow can be connected in a later phase.
-        </p>
-        <PrimaryButton onClick={onClose} className="mt-5 w-full">
-          Done
-        </PrimaryButton>
-      </div>
-    </div>
-  );
-}
-
-function formatPrice(value: number) {
-  return `$${value}`;
 }
 
 function formatDate(value: string) {
