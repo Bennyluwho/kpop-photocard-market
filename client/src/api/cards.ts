@@ -1,4 +1,4 @@
-import type { CardFeedItem, GroupSummary } from "./types";
+import type { CardFeedItem, CardSummary, GroupSummary } from "./types";
 
 const API_BASE = "/api";
 
@@ -27,4 +27,8 @@ export async function fetchCardFeed(search?: string): Promise<CardFeedItem[]> {
 
 export async function fetchGroups(): Promise<GroupSummary[]> {
   return parseJson<GroupSummary[]>(await fetch(`${API_BASE}/cards/groups`));
+}
+
+export async function fetchCardSummary(cardId: string): Promise<CardSummary> {
+  return parseJson<CardSummary>(await fetch(`${API_BASE}/cards/${cardId}/summary`));
 }

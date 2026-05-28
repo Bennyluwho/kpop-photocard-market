@@ -7,10 +7,12 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             <div className="flex items-center">
-              <h1 className="font-semibold text-xl">K-Card Market</h1>
+              <a href="/" className="font-semibold text-xl">
+                K-Card Market
+              </a>
             </div>
             <div className="hidden md:flex items-center gap-6">
-              <a href="#" className="text-sm hover:text-primary transition-colors">Browse</a>
+              <a href="/#marketplace" className="text-sm hover:text-primary transition-colors">Browse</a>
               <a href="#" className="text-sm hover:text-primary transition-colors">Sell</a>
               <a href="#" className="text-sm hover:text-primary transition-colors">About</a>
             </div>

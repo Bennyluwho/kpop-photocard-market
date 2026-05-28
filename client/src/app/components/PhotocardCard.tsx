@@ -15,6 +15,7 @@ interface PhotocardCardProps {
 }
 
 export function PhotocardCard({
+  id,
   image,
   group,
   idol,
@@ -25,8 +26,8 @@ export function PhotocardCard({
   trend,
   trendPercent,
 }: PhotocardCardProps) {
-  return (
-    <div className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
+  const cardContent = (
+    <>
       <div className="aspect-[3/4] bg-muted overflow-hidden">
         <ImageWithFallback
           src={image}
@@ -58,6 +59,23 @@ export function PhotocardCard({
           />
         </div>
       </div>
+    </>
+  );
+
+  if (id) {
+    return (
+      <a
+        href={`/cards/${id}`}
+        className="block bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group"
+      >
+        {cardContent}
+      </a>
+    );
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
+      {cardContent}
     </div>
   );
 }

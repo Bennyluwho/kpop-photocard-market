@@ -9,14 +9,37 @@ import { GroupCard } from './components/GroupCard';
 import { SearchBar } from './components/SearchBar';
 import { SectionHeader } from './components/SectionHeader';
 import { CardGrid } from './components/CardGrid';
+import Marketplace from './Marketplace';
+import CardDetail from './CardDetail';
+
+function getCurrentRoute() {
+  if (window.location.pathname.startsWith('/cards/')) {
+    return window.location.pathname;
+  }
+
+  return window.location.hash;
+}
 
 export default function App() {
+  const [page, setPage] = useState(getCurrentRoute);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [cards, setCards] = useState<CardFeedItem[]>([]);
   const [groups, setGroups] = useState<GroupSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleLocationChange = () => setPage(getCurrentRoute());
+
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search), 300);
@@ -77,6 +100,14 @@ export default function App() {
       {hasCards && `${trendingCards.length} cards`}
     </span>
   );
+
+  if (page === '#marketplace') {
+    return <Marketplace />;
+  }
+
+  if (page.startsWith('/cards/')) {
+    return <CardDetail cardId={page.replace('/cards/', '')} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

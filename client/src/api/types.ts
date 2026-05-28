@@ -6,6 +6,7 @@ export interface ApiCard {
   version: string;
   cardType: string;
   rarity: string;
+  condition?: string;
   imageUrl: string;
   aliases: string[];
   createdAt: string;
@@ -24,4 +25,24 @@ export interface CardFeedItem extends ApiCard {
 export interface GroupSummary {
   name: string;
   cardCount: number;
+}
+
+export interface PriceHistoryEntry {
+  _id: string;
+  cardId: string;
+  price: number;
+  source: string;
+  condition: string;
+  soldDate: string;
+  confidence: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CardSummary {
+  card: ApiCard;
+  estimatedMarketValue: number | null;
+  priceCount: number;
+  method: string;
+  priceHistory: PriceHistoryEntry[];
 }
