@@ -10,6 +10,7 @@ import { PrimaryButton } from './components/PrimaryButton';
 import { SecondaryLink } from './components/SecondaryButton';
 import { SectionHeader } from './components/SectionHeader';
 import { DetailSkeleton, EmptyState, ErrorState } from './components/StatusStates';
+import { addToCart, isInCart, removeFromCart, subscribeToCart } from './cartStore.js';
 import {
   addToWatchlist,
   isWatchlisted,
@@ -228,6 +229,34 @@ function MetadataItem({ label, value }: { label: string; value: string }) {
 
 function ListingCard({ listing, card }: { listing: ApiListing; card: ApiCard }) {
   const imageUrl = listing.userImageUrl || card.imageUrl;
+  const [inCart, setInCart] = useState(() => isInCart(listing._id));
+
+  useEffect(() => {
+    const refreshCartState = () => setInCart(isInCart(listing._id));
+    return subscribeToCart(refreshCartState);
+  }, [listing._id]);
+
+  function handleCartToggle() {
+    if (inCart) {
+      removeFromCart(listing._id);
+      return;
+    }
+
+    addToCart({
+      id: listing._id,
+      listingId: listing._id,
+      cardId: card._id,
+      image: imageUrl,
+      group: card.group,
+      idol: card.idol,
+      album: formatAlbumLabel(card),
+      rarity: card.rarity,
+      sellerName: listing.sellerName,
+      price: listing.price,
+      condition: listing.condition,
+      description: listing.description,
+    });
+  }
 
   return (
     <article className="grid gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:grid-cols-[120px_1fr]">
@@ -261,10 +290,11 @@ function ListingCard({ listing, card }: { listing: ApiListing; card: ApiCard }) 
 
         <button
           type="button"
+          onClick={handleCartToggle}
           className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ShoppingCart className="h-4 w-4" />
-          Add to Cart
+          {inCart ? 'Remove from Cart' : 'Add to Cart'}
         </button>
       </div>
     </article>

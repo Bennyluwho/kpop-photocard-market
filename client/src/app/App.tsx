@@ -12,6 +12,7 @@ import { CardGrid } from './components/CardGrid';
 import { CardSkeletonGrid, EmptyState, ErrorState } from './components/StatusStates';
 import Marketplace from './Marketplace';
 import CardDetail from './CardDetail';
+import Cart from './Cart';
 import SellCard from './SellCard';
 import Watchlist from './Watchlist';
 
@@ -27,6 +28,10 @@ function getCurrentRoute() {
   }
 
   if (window.location.pathname === '/watchlist') {
+    return window.location.pathname;
+  }
+
+  if (window.location.pathname === '/cart') {
     return window.location.pathname;
   }
 
@@ -128,6 +133,10 @@ export default function App() {
 
   if (page === '/watchlist') {
     return <Watchlist />;
+  }
+
+  if (page === '/cart') {
+    return <Cart />;
   }
 
   return (
